@@ -66,7 +66,7 @@ def write_out_csv(results, header, file:str)->None:
             writer.writerow(r)
 
 
-def write_out_bin(results, header, file)->None:
+def write_out_bin(results, header, file:str)->None:
     """
     Write a 2D array of int32s to a custom binary file
     """
@@ -85,7 +85,7 @@ def write_out_bin(results, header, file)->None:
     m[:] = arr
     m.flush()
 
-def write_out(results, header, file)->None:
+def write_out(results, header, file:str)->None:
     """
     Dispatch to CSV or binary writer based on file suffix.
 
