@@ -2,7 +2,7 @@
 
 Template repository for an Ersilia Python package.
 
-This package provides a foundation for developing and distributing Python tools within the Ersilia ecosystem. It is designed to help researchers and developers quickly set up, share, and maintain reproducible code for AI/ML models, particularly in the context of antimicrobial drug discovery. If you are developing a package, use this paragraph as placeholder for an introduction about the package.
+This package provides some utils used by ersilia-pack.
 
 ## Installation
 
