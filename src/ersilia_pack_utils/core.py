@@ -61,7 +61,7 @@ def write_out_bin(results, header, file: str, dtype: np.dtype | None = None) -> 
     """
     Write a 2D array to a custom binary file.
 
-    Strict mode: dtype must be exactly np.int32 or np.float32 (no normalization).
+    Strict mode: dtype must be exactly np.int32 or np.float32.
     """
     if dtype is None:
         raise ValueError("dtype must be specified (np.int32 or np.float32).")
