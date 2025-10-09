@@ -1,37 +1,13 @@
 # My Ersilia Python Package
 
-Template repository for an Ersilia Python package.
 
 This package provides some utils used by ersilia-pack.
 
-## Installation
+## Tools
 
-To get started, create a Conda environment:
-
-```bash
-conda create -n my_env python=3.12
-conda activate my_env
-```
-
-Then install the package using pip:
-
-```bash
-pip install git+https://github.com/ersilia-os/my-ersilia-python-package.git
-```
-
-## Usage
-
-Provide an end-to-end usage example. All data should be included in the repository for reproducibility.
-
-Example:
-
-```python
-from my_package.core import hello
-
-hello("Ersilia")
-```
-
-This prints `"Hello, Ersilia!"` in the Python terminal.
+### IO
+- read_smiles: Dispatch to the appropriate SMILES reader based on file suffix.
+- write_out: Dispatch to CSV or binary writer based on file suffix.
 
 ## About the Ersilia Open Source Initiative
 
