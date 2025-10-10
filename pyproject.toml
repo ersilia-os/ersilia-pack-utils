@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ersilia-pack-utils"
-version = "0.1.1"
+version = "0.1.2"
 description = "utils for ersilia pack"
 readme = "README.md"
 license = {file = "LICENSE"}
