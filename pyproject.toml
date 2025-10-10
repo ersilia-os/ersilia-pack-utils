@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ersilia-pack-utils"
-version = "0.1.0"
-description = "A short description of my package"
+version = "0.1.1"
+description = "utils for ersilia pack"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
   {name="Your Name", email="you@ersilia.io"}
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.8"
 
 dependencies = [
   "numpy>=1.21",
