@@ -2,16 +2,17 @@ import csv
 import json
 import struct
 import numpy as np
+from typing import List, Tuple, Optional
 
-Smiles = list[str]
-Header = list[str]
+Smiles = List[str]
+Header = List[str]
 
 _ALLOWED_DATA_TYPES = {
     "int32": np.int32,
     "float32": np.float32,
 }
 
-def read_smiles_csv(in_file: str) -> tuple[Header, Smiles]:
+def read_smiles_csv(in_file: str) -> Tuple[Header, Smiles]:
     """Read SMILES strings from a CSV file."""
     with open(in_file, "r", newline="") as f:
         reader = csv.reader(f)
@@ -20,7 +21,7 @@ def read_smiles_csv(in_file: str) -> tuple[Header, Smiles]:
     return cols, data
 
 
-def read_smiles_bin(in_file: str) -> tuple[Header, Smiles]:
+def read_smiles_bin(in_file: str) -> Tuple[Header, Smiles]:
     """Read SMILES strings from a custom binary file (length-prefixed strings)."""
     with open(in_file, "rb") as f:
         data = f.read()
@@ -42,7 +43,7 @@ def read_smiles_bin(in_file: str) -> tuple[Header, Smiles]:
     return cols, smiles_list
 
 
-def read_smiles(in_file: str) -> tuple[Header, Smiles]:
+def read_smiles(in_file: str) -> Tuple[Header, Smiles]:
     """Dispatch to the appropriate SMILES reader based on file suffix."""
     if in_file.endswith(".bin"):
         return read_smiles_bin(in_file)
@@ -57,7 +58,7 @@ def write_out_csv(results, header, file: str) -> None:
         writer.writerows(results)
 
 
-def write_out_bin(results, header, file: str, dtype: np.dtype | None = None) -> None:
+def write_out_bin(results, header, file: str, dtype: Optional[np.dtype] = None) -> None:
     """
     Write a 2D array to a custom binary file.
 
@@ -88,7 +89,7 @@ def write_out_bin(results, header, file: str, dtype: np.dtype | None = None) -> 
     m.flush()
 
 
-def write_out(results, header, file: str, dtype: np.dtype | None = None) -> None:
+def write_out(results, header, file: str, dtype:Optional[np.dtype] = None) -> None:
     """
     Dispatch to CSV or binary writer based on file suffix.
     """
