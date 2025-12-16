@@ -89,7 +89,7 @@ def write_out_bin(results, header, file: str, dtype: Optional[np.dtype] = None) 
     m.flush()
 
 
-def write_out(results, header, file: str, dtype:Optional[np.dtype] = None) -> None:
+def write_out(results, header, file: str, dtype:Optional[np.dtype] = np.float32) -> None:
     """
     Dispatch to CSV or binary writer based on file suffix.
     """
