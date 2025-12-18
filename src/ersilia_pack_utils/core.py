@@ -2,18 +2,47 @@ import csv
 import json
 import struct
 import numpy as np
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Any
 
 Smiles = List[str]
 Header = List[str]
 
-_ALLOWED_DATA_TYPES = {
-    "int32": np.int32,
-    "float32": np.float32,
+_ALLOWED_BIN_DTYPES = {
+    np.dtype(np.int8),
+    np.dtype(np.int16),
+    np.dtype(np.int32),
+    np.dtype(np.int64),
+    np.dtype(np.float32),
+    np.dtype(np.float64),
 }
 
+_DTYPE_ALIASES = {
+    "float": np.dtype(np.float64),
+    "float32": np.dtype(np.float32),
+    "float64": np.dtype(np.float64),
+    "int8": np.dtype(np.int8),
+    "int16": np.dtype(np.int16),
+    "int32": np.dtype(np.int32),
+    "int64": np.dtype(np.int64),
+}
+
+def _normalize_dtype(dtype: Any) -> np.dtype:
+    if dtype is None:
+        raise ValueError("dtype must be specified.")
+
+    if isinstance(dtype, str):
+        key = dtype.strip().lower()
+        if key in _DTYPE_ALIASES:
+            return _DTYPE_ALIASES[key]
+        return np.dtype(key)
+
+    if isinstance(dtype, (int, float)) and not isinstance(dtype, bool):
+        return np.dtype(type(dtype))
+
+    return np.dtype(dtype)
+
+
 def read_smiles_csv(in_file: str) -> Tuple[Header, Smiles]:
-    """Read SMILES strings from a CSV file."""
     with open(in_file, "r", newline="") as f:
         reader = csv.reader(f)
         cols = next(reader)
@@ -22,7 +51,6 @@ def read_smiles_csv(in_file: str) -> Tuple[Header, Smiles]:
 
 
 def read_smiles_bin(in_file: str) -> Tuple[Header, Smiles]:
-    """Read SMILES strings from a custom binary file (length-prefixed strings)."""
     with open(in_file, "rb") as f:
         data = f.read()
 
@@ -44,55 +72,45 @@ def read_smiles_bin(in_file: str) -> Tuple[Header, Smiles]:
 
 
 def read_smiles(in_file: str) -> Tuple[Header, Smiles]:
-    """Dispatch to the appropriate SMILES reader based on file suffix."""
     if in_file.endswith(".bin"):
         return read_smiles_bin(in_file)
     return read_smiles_csv(in_file)
 
 
 def write_out_csv(results, header, file: str) -> None:
-    """Write rows to a CSV file."""
     with open(file, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(header)
         writer.writerows(results)
 
 
-def write_out_bin(results, header, file: str, dtype: Optional[np.dtype] = None) -> None:
-    """
-    Write a 2D array to a custom binary file.
+def write_out_bin(results, header, file: str, dtype: Optional[Any] = None) -> None:
+    dt = _normalize_dtype(dtype)
 
-    Strict mode: dtype must be exactly np.int32 or np.float32.
-    """
-    if dtype is None:
-        raise ValueError("dtype must be specified (np.int32 or np.float32).")
-    if dtype not in (np.int32, np.float32):
-        raise ValueError("Only np.int32 and np.float32 are supported for binary endpoints.")
+    if dt not in _ALLOWED_BIN_DTYPES:
+        allowed = ", ".join(sorted(d.name for d in _ALLOWED_BIN_DTYPES))
+        raise ValueError(f"Unsupported dtype {dt!r}. Allowed: {allowed}")
 
-    arr = np.asarray(results, dtype=dtype)
+    arr = np.asarray(results, dtype=dt)
     if arr.ndim == 1:
         arr = arr.reshape(-1, 1)
 
     if len(header) != arr.shape[1]:
         raise ValueError(f"Header length ({len(header)}) != number of columns ({arr.shape[1]}).")
 
-    dtype_name = "int32" if dtype is np.int32 else "float32"
-    meta = {"columns": list(header), "shape": list(arr.shape), "dtype": dtype_name}
+    meta = {"columns": list(header), "shape": list(arr.shape), "dtype": dt.name}
     meta_bytes = (json.dumps(meta) + "\n").encode("utf-8")
 
     with open(file, "wb") as f:
         f.write(meta_bytes)
         f.truncate(len(meta_bytes) + arr.nbytes)
 
-    m = np.memmap(file, dtype=dtype, mode="r+", offset=len(meta_bytes), shape=arr.shape)
+    m = np.memmap(file, dtype=dt, mode="r+", offset=len(meta_bytes), shape=arr.shape)
     m[:] = arr
     m.flush()
 
 
-def write_out(results, header, file: str, dtype:Optional[np.dtype] = np.float32) -> None:
-    """
-    Dispatch to CSV or binary writer based on file suffix.
-    """
+def write_out(results, header, file: str, dtype: Optional[Any] = np.float32) -> None:
     if file.endswith(".bin"):
         write_out_bin(results, header, file, dtype)
     elif file.endswith(".csv"):
