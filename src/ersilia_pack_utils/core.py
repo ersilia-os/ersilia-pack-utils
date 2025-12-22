@@ -8,27 +8,21 @@ Smiles = List[str]
 Header = List[str]
 
 _ALLOWED_BIN_DTYPES = {
-    np.dtype(np.int8),
-    np.dtype(np.int16),
     np.dtype(np.int32),
-    np.dtype(np.int64),
     np.dtype(np.float32),
-    np.dtype(np.float64),
 }
 
 _DTYPE_ALIASES = {
-    "float": np.dtype(np.float64),
-    "float32": np.dtype(np.float32),
-    "float64": np.dtype(np.float64),
-    "int8": np.dtype(np.int8),
-    "int16": np.dtype(np.int16),
     "int32": np.dtype(np.int32),
-    "int64": np.dtype(np.int64),
+    "float32": np.dtype(np.float32),
 }
+
+_F32 = np.finfo(np.float32)
+
 
 def _normalize_dtype(dtype: Any) -> np.dtype:
     if dtype is None:
-        raise ValueError("dtype must be specified.")
+        raise ValueError("dtype must be specified (only 'int32' or 'float32').")
 
     if isinstance(dtype, str):
         key = dtype.strip().lower()
@@ -36,11 +30,28 @@ def _normalize_dtype(dtype: Any) -> np.dtype:
             return _DTYPE_ALIASES[key]
         return np.dtype(key)
 
-    if isinstance(dtype, (int, float)) and not isinstance(dtype, bool):
-        return np.dtype(type(dtype))
-
     return np.dtype(dtype)
 
+
+def _clip(results):
+    x = np.asarray(results, dtype=np.float64)
+    try:
+        np.nan_to_num(x, copy=False, nan=np.nan, posinf=_F32.max, neginf=_F32.min)
+        np.clip(x, _F32.min, _F32.max, out=x)
+        return x.astype(np.float32)
+    except TypeError:
+        nan_mask = np.isnan(x)
+        np.nan_to_num(x, copy=False, posinf=_F32.max, neginf=_F32.min)
+        np.clip(x, _F32.min, _F32.max, out=x)
+        x[nan_mask] = np.nan
+        return x.astype(np.float32)
+
+def clip(results, dt: np.dtype) -> np.ndarray:
+    if dt == np.dtype(np.int32):
+        return np.asarray(results, dtype=np.int32)
+    if dt == np.dtype(np.float32):
+        return _clip(results)
+    raise ValueError(f"Unsupported dtype {dt!r}.")
 
 def read_smiles_csv(in_file: str) -> Tuple[Header, Smiles]:
     with open(in_file, "r", newline="") as f:
@@ -91,7 +102,7 @@ def write_out_bin(results, header, file: str, dtype: Optional[Any] = None) -> No
         allowed = ", ".join(sorted(d.name for d in _ALLOWED_BIN_DTYPES))
         raise ValueError(f"Unsupported dtype {dt!r}. Allowed: {allowed}")
 
-    arr = np.asarray(results, dtype=dt)
+    arr = clip(results, dt)
     if arr.ndim == 1:
         arr = arr.reshape(-1, 1)
 
