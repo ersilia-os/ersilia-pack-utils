@@ -1,9 +1,5 @@
-# My Ersilia Python Package
-
-
+# Ersilia Pack Utils
 This package provides some utils used by ersilia-pack.
-
-## Tools
 
 ### IO
 - read_smiles: Dispatch to the appropriate SMILES reader based on file suffix.
